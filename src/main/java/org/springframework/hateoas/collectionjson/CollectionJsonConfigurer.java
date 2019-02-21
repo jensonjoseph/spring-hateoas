@@ -13,38 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.hateoas.config.mvc;
+package org.springframework.hateoas.collectionjson;
 
-import java.util.Collection;
+import java.util.List;
 
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.hateoas.LinkDiscoverer;
+import org.springframework.hateoas.config.EnableHypermediaSupport.HypermediaType;
 import org.springframework.hateoas.config.Hypermedia;
-import org.springframework.hateoas.core.DelegatingRelProvider;
-import org.springframework.hateoas.hal.CurieProvider;
-import org.springframework.hateoas.hal.HalConfiguration;
-import org.springframework.hateoas.hal.forms.HalFormsConfiguration;
+import org.springframework.http.MediaType;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Spring MVC HATEOAS Configuration
- *
  * @author Greg Turnquist
  */
 @Configuration
-public class WebMvcHateoasConfiguration {
+public class CollectionJsonConfigurer {
 
 	@Bean
-	HypermediaWebMvcConfigurer hypermediaWebMvcConfigurer(ObjectProvider<ObjectMapper> mapper,
-			  Collection<Hypermedia> hypermediaTypes) {
+	Hypermedia collectionJsonBean() {
 
-		return new HypermediaWebMvcConfigurer(mapper.getIfAvailable(ObjectMapper::new), hypermediaTypes);
+		return new Hypermedia() {
+			@Override
+			public List<MediaType> getMediaTypes() {
+				return HypermediaType.COLLECTION_JSON.getMediaTypes();
+			}
+
+			@Override
+			public ObjectMapper createObjectMapper(ObjectMapper mapper) {
+
+				ObjectMapper mapper1 = mapper.copy();
+
+				mapper1.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+				mapper1.registerModule(new Jackson2CollectionJsonModule());
+
+				return mapper1;
+			}
+		};
 	}
 
 	@Bean
-	HypermediaRestTemplateBeanPostProcessor restTemplateBeanPostProcessor(HypermediaWebMvcConfigurer configurer) {
-		return new HypermediaRestTemplateBeanPostProcessor(configurer);
+	LinkDiscoverer linkDiscoverer() {
+		return new CollectionJsonLinkDiscoverer();
 	}
+
 }

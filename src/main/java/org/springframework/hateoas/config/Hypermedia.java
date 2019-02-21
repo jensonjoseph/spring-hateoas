@@ -16,6 +16,7 @@
 package org.springframework.hateoas.config;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.MediaType;
 import org.springframework.util.MimeType;
@@ -46,5 +47,9 @@ public interface Hypermedia {
 	 */
 	default ObjectMapper createObjectMapper(ObjectMapper mapper) {
 		return mapper.copy();
+	}
+
+	default Optional<Class<?>> configurer() {
+		return Optional.empty();
 	}
 }
